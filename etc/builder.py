@@ -13,6 +13,27 @@ class aravisCamera(GenICam):
     # This tells xmlbuilder to use PORT instead of name as the row ID
     UniqueName = "PORT"
     _SpecificTemplate = aravisCameraTemplate
+    # List of camera classes available from ADGenICam
+    camera_class_list = [
+        'AVT_Mako_1_52',
+        'AVT_Mako_G125B',
+        'AVT_Mako_G125C',
+        'AVT_Mako_G234B',
+        'AVT_Mako_G234C',
+        'AVT_Mako_G507B',
+        'AVT_Manta_1_44',
+        'AVT_Manta_G125B',
+        'AVT_Manta_G125C',
+        'AVT_Manta_G145B',
+        'AVT_Manta_G235B',
+        'AVT_Manta_G235C',
+        'AVT_Manta_G609B',
+        'AVT_Manta_G895B',
+        'AVT_Prosilica_GC655C',
+        'AVT_Prosilica_GC1280M',
+        'AVT_Prosilica_GT5120',
+        'Prosilica_GC'
+    ]
     def __init__(self, P, R, PORT, ID, CLASS, PV_ALIAS, BUFFERS=50, MEMORY=-1, **args):
         # Init the superclass
         self.__super.__init__(P, R, PORT, ID, CLASS, BUFFERS, MEMORY)
@@ -37,24 +58,7 @@ class aravisCamera(GenICam):
         R       = Simple('PV Suffix', str),
         PORT    = Simple('Port name for the camera', str),
         ID      = Simple('Cam ip address, hostname, MAC address, or ID <manufacturer>-<serial>, (e.g. Prosilica-02-2166A-06844)', str),
-        CLASS   = Choice('Camera class for custom commands', [
-            'AVT_Mako_1_52',
-            'AVT_Mako_G125B',
-            'AVT_Mako_G125C',
-            'AVT_Mako_G234C',
-            'AVT_Mako_G507B',
-            'AVT_Manta_1_44',
-            'AVT_Manta_G125B',
-            'AVT_Manta_G125C',
-            'AVT_Manta_G145B',
-            'AVT_Manta_G235B',
-            'AVT_Manta_G235C',
-            'AVT_Manta_G609B',
-            'AVT_Manta_G895B',
-            'AVT_Prosilica_GC655C',
-            'AVT_Prosilica_GC1280M',
-            'AVT_Prosilica_GT5120',
-            'Prosilica_GC']),
+        CLASS   = Choice('Camera class for custom commands', camera_class_list),
         PV_ALIAS= Choice('Use alias template to keep some key PV names the same',
             [0,1]),
         BUFFERS = Simple('Maximum number of NDArray buffers to be created for '
