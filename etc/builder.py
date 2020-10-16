@@ -22,6 +22,7 @@ class aravisCamera(GenICam):
         'AVT_Mako_G234C',
         'AVT_Mako_G507B',
         'AVT_Manta_1_44',
+        'AVT_Manta_G040B',
         'AVT_Manta_G125B',
         'AVT_Manta_G125C',
         'AVT_Manta_G145B',
@@ -30,6 +31,7 @@ class aravisCamera(GenICam):
         'AVT_Manta_G609B',
         'AVT_Manta_G895B',
         'AVT_Prosilica_GC655C',
+        'AVT_Prosilica_GC1020C',
         'AVT_Prosilica_GC1280M',
         'AVT_Prosilica_GT5120',
         'Prosilica_GC'
