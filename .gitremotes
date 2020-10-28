@@ -1,0 +1,2 @@
+upstream git@github.com:areaDetector/ADAravis.git
+dls-controls git@github.com:dls-controls/ADAravis.git
