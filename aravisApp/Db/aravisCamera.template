@@ -124,8 +124,8 @@ record(mbbi, "$(P)$(R)ARLeftShift_RBV") {
   info(autosaveFields, "DESC ZRSV ONSV")
 }
 
-## If this is set to 1, then 10, 12 and 16 bit images will be left shifted 
-## so that a pixel with maximum exposure = 2^16 no matter what the pixel format 
+## If this is set to 1, then 10, 12 and 16 bit images will be left shifted
+## so that a pixel with maximum exposure = 2^16 no matter what the pixel format
 record(mbbo, "$(P)$(R)ARLeftShift") {
   field(DTYP, "asynInt32")
   field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))ARAVIS_LEFTSHIFT")
@@ -133,30 +133,9 @@ record(mbbo, "$(P)$(R)ARLeftShift") {
   field(ZRVL, "0")
   field(ONST, "Yes")
   field(ONVL, "1")
+  field(PINI, "1")
   info(autosaveFields, "DESC ZRSV ONSV VAL")
 }
-
-record(bi, "$(P)$(R)ARHWImageMode_RBV") {
-  field(DESC, "Use HW register for acquisition modes")
-  field(DTYP, "asynInt32")
-  field(INP,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))ARAVIS_HWIMAGEMODE")
-  field(ZNAM, "No")
-  field(ONAM, "Yes")
-  field(SCAN, "I/O Intr")
-  info(autosaveFields, "DESC")
-}
-
-## If this is set to 1, the acquisition mode is communicated to the
-## hardware, on zero a software based implementation is used
-record(bo, "$(P)$(R)ARHWImageMode") {
-  field(DESC, "Use HW register for image modes")
-  field(DTYP, "asynInt32")
-  field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))ARAVIS_HWIMAGEMODE")
-  field(ZNAM, "No")
-  field(ONAM, "Yes")
-  info(autosaveFields, "DESC VAL")
-}
-
 
 # Disable gui components as DataType and ColorMode should be adjusted using GC_PixelFormat
 record(mbbo, "$(P)$(R)DataType")
@@ -175,5 +154,3 @@ record(mbbi, "$(P)$(R)ColorMode_RBV")
 {
     field(DISA, "1")
 }
-
-
