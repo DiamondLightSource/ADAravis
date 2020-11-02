@@ -18,6 +18,7 @@ class aravisCamera(GenICam):
         'AVT_Mako_1_52',
         'AVT_Mako_G125B',
         'AVT_Mako_G125C',
+        'AVT_Mako_G158C',
         'AVT_Mako_G234B',
         'AVT_Mako_G234C',
         'AVT_Mako_G507B',
@@ -28,13 +29,15 @@ class aravisCamera(GenICam):
         'AVT_Manta_G145B',
         'AVT_Manta_G235B',
         'AVT_Manta_G235C',
+        'AVT_Manta_G507B',
         'AVT_Manta_G609B',
         'AVT_Manta_G895B',
         'AVT_Prosilica_GC655C',
         'AVT_Prosilica_GC1020C',
         'AVT_Prosilica_GC1280M',
         'AVT_Prosilica_GT5120',
-        'Prosilica_GC'
+        'Prosilica_GC',
+        'Basler_piA640_210gm',
     ]
     def __init__(self, P, R, PORT, ID, CLASS, PV_ALIAS, BUFFERS=50, MEMORY=-1, **args):
         # Init the superclass
