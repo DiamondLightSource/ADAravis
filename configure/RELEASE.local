@@ -4,10 +4,10 @@ WORK=/dls_sw/work/R3.14.12.7/support
 
 ASYN=         $(SUPPORT)/asyn/4-41
 ADCORE=       $(SUPPORT)/ADCore/3-10dls1
-ADGENICAM=    $(SUPPORT)/ADGenICam/1-4dls4
+ADGENICAM=    $(SUPPORT)/ADGenICam/1-6dls1
 
 
-ARAVIS = /dls_sw/prod/tools/RHEL7-x86_64/aravis/0-7-2/prefix
+ARAVIS = /dls_sw/prod/tools/RHEL7-x86_64/aravis/0-8-1/prefix
 
 
 # comment this out if glib is installed in a standard place
