@@ -22,6 +22,7 @@ class aravisCamera(GenICam):
         'AVT_Mako_G234B',
         'AVT_Mako_G234C',
         'AVT_Mako_G507B',
+        'AVT_Mako_G507C',
         'AVT_Manta_1_44',
         'AVT_Manta_G040B',
         'AVT_Manta_G125B',
