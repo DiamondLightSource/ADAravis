@@ -12,6 +12,12 @@ files respectively, in the configure/ directory of the appropriate release of th
 
 Release Notes
 =============
+### R2-2-1 (May 26, 2021)
+----
+* Added continuous integration via Github Actions.  Thanks to Michael Davidsaver for this.
+* Improve error reporting by fetching the underlying error from aravis.
+* Add missing LIB_LIBS in Makefile.
+
 ### R2-2 (November 15, 2020)
 ----
 * Added new ConvertPixelFormat mbbo record with choices of Mono16Low and Mono16High.
@@ -30,7 +36,7 @@ Release Notes
     The data will then span the range 0-4095.
   - Note that when decompressing Mono12Packed and Mono12p it may still be desirable to
     use ShiftDir and ShiftBits.  For example on FLIR cameras if AdcBitDepth=10 then the data unpacked
-    with ConvertPixelFormat will be 12 bits with a range of 0-4095, with bits 0 and 1 both 0.
+    with ConvertPixelFormat=Mono16Low will be 12 bits with a range of 0-4095, with bits 0 and 1 both 0.
     By using ShiftDir=Right and ShiftBits=2 then the data will be truly 10 bits, with a range of 0-1023.
 
 ### R2-1 (October 2, 2020)
