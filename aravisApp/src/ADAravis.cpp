@@ -71,6 +71,18 @@ struct pix_lookup {
     int colorMode, dataType, bayerFormat;
 };
 
+typedef enum {
+    AravisConvertPixelFormatMono16Low,
+    AravisConvertPixelFormatMono16High
+} AravisConvertPixelFormat_t;
+
+typedef enum {
+    AravisShiftNone,
+    AravisShiftLeft,
+    AravisShiftRight
+} AravisShift_t;
+
+
 static const struct pix_lookup pix_lookup[] = {
     { ARV_PIXEL_FORMAT_MONO_8,        NDColorModeMono,  NDUInt8,  0           },
     { ARV_PIXEL_FORMAT_RGB_8_PACKED,  NDColorModeRGB1,  NDUInt8,  0           },
@@ -152,7 +164,9 @@ protected:
     int AravisPktResend;
     int AravisPktTimeout;
     int AravisResentPkts;
-    int AravisLeftShift;
+    int AravisConvertPixelFormat;
+    int AravisShiftDir;
+    int AravisShiftBits;
     int AravisConnection;
     int AravisReset;
     #define LAST_ARAVIS_CAMERA_PARAM AravisReset
@@ -315,7 +329,9 @@ ADAravis::ADAravis(const char *portName, const char *cameraName, int enableCachi
     createParam("ARAVIS_RESENT_PKTS",    asynParamInt32,   &AravisResentPkts);
     createParam("ARAVIS_PKT_RESEND",     asynParamInt32,   &AravisPktResend);
     createParam("ARAVIS_PKT_TIMEOUT",    asynParamInt32,   &AravisPktTimeout);
-    createParam("ARAVIS_LEFTSHIFT",      asynParamInt32,   &AravisLeftShift);
+    createParam("ARAVIS_CONVERT_PIXEL_FORMAT", asynParamInt32,   &AravisConvertPixelFormat);
+    createParam("ARAVIS_SHIFT_DIR",      asynParamInt32,   &AravisShiftDir);
+    createParam("ARAVIS_SHIFT_BITS",     asynParamInt32,   &AravisShiftBits);
     createParam("ARAVIS_CONNECTION",     asynParamInt32,   &AravisConnection);
     createParam("ARAVIS_RESET",          asynParamInt32,   &AravisReset);
 
@@ -335,7 +351,9 @@ ADAravis::ADAravis(const char *portName, const char *cameraName, int enableCachi
     setIntegerParam(AravisPktResend, 1);
     setIntegerParam(AravisPktTimeout, 20000);       // aravisGigE default 20ms
     setIntegerParam(AravisResentPkts, 0);
-    setIntegerParam(AravisLeftShift, 1);
+    setIntegerParam(AravisConvertPixelFormat, AravisConvertPixelFormatMono16Low);
+    setIntegerParam(AravisShiftDir, 0);
+    setIntegerParam(AravisShiftBits, 4);
     setIntegerParam(AravisReset, 0);
     
     /* Enable the fake camera for simulations */
@@ -541,12 +559,8 @@ asynStatus ADAravis::writeInt32(asynUser *pasynUser, epicsInt32 value)
         status = asynError;
     } else if (function == AravisConnection) {
         if (this->connectionValid != 1) status = asynError;
-    } else if (function == AravisLeftShift) {
-        if (value < 0 || value > 1) {
-            setIntegerParam(function, rbv);
-            status = asynError;
-        }
-    } else if (function == AravisFrameRetention || function == AravisPktResend || function == AravisPktTimeout) {
+    } else if (function == AravisFrameRetention || function == AravisPktResend || function == AravisPktTimeout ||
+               function == AravisShiftDir || function == AravisShiftBits || function == AravisConvertPixelFormat) {
         /* just write the value for these as they get fetched via getIntegerParam when needed */
     } else if ((function < FIRST_ARAVIS_CAMERA_PARAM) || (function > LAST_ARAVIS_CAMERA_PARAM)) {
         /* If this parameter belongs to a base class call its method */
@@ -683,7 +697,7 @@ asynStatus ADAravis::processBuffer(ArvBuffer *buffer) {
     int arrayCallbacks, imageCounter, numImages, numImagesCounter, imageMode;
     int colorMode, dataType, bayerFormat;
     size_t expected_size;
-    int xDim=0, yDim=1, binX, binY, left_shift;
+    int xDim=0, yDim=1, binX, binY, shiftDir, shiftBits;
     double acquirePeriod;
     const char *functionName = "processBuffer";
     guint64 n_completed_buffers, n_failures, n_underruns;
@@ -697,7 +711,8 @@ asynStatus ADAravis::processBuffer(ArvBuffer *buffer) {
     getIntegerParam(ADImageMode, &imageMode);
     getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
     getDoubleParam(ADAcquirePeriod, &acquirePeriod);
-    getIntegerParam(AravisLeftShift, &left_shift); 
+    getIntegerParam(AravisShiftDir, &shiftDir); 
+    getIntegerParam(AravisShiftBits, &shiftBits); 
     /* The buffer structure does not contain the binning, get that from param lib,
      * but it could be wrong for this frame if recently changed */
     getIntegerParam(ADBinX, &binX);
@@ -736,13 +751,16 @@ asynStatus ADAravis::processBuffer(ArvBuffer *buffer) {
        ( pixel_format == ARV_PIXEL_FORMAT_MONO_12_PACKED)) {
         //epicsTimeStamp tstart, tend;
         //epicsTimeGetCurrent(&tstart);
+        int convertFormat;
+        getIntegerParam(AravisConvertPixelFormat, &convertFormat);
+        bool leftShift = (convertFormat == AravisConvertPixelFormatMono16High);
         NDArray *pIn = pRaw;
         size_t bufferDims[2] = {(size_t)width, (size_t)height};
         pRaw = this->pNDArrayPool->alloc(2, bufferDims, NDUInt16, 0, NULL);
         if (pixel_format == ARV_PIXEL_FORMAT_MONO_12_P) {
-            decompressMono12p(width*height, (epicsUInt8 *)pIn->pData, (epicsUInt16 *)pRaw->pData);
+            decompressMono12p(width*height, leftShift, (epicsUInt8 *)pIn->pData, (epicsUInt16 *)pRaw->pData);
         } else {
-            decompressMono12Packed(width*height, (epicsUInt8 *)pIn->pData, (epicsUInt16 *)pRaw->pData);
+            decompressMono12Packed(width*height, leftShift, (epicsUInt8 *)pIn->pData, (epicsUInt16 *)pRaw->pData);
         }
         //epicsTimeGetCurrent(&tend);
         //printf("Time to convert Mono12 = %f\n", epicsTimeDiffInSeconds(&tend, &tstart));
@@ -809,28 +827,14 @@ asynStatus ADAravis::processBuffer(ArvBuffer *buffer) {
     /* If we are 16 bit, shift by the correct amount */
     if (pRaw->dataType == NDUInt16) {
         expected_size *= 2;
-        if (left_shift) {
-            int shift = 0;
-            switch (pixel_format) {
-                case ARV_PIXEL_FORMAT_MONO_14:
-                    shift = 2;
-                    break;
-                case ARV_PIXEL_FORMAT_MONO_12:
-                case ARV_PIXEL_FORMAT_MONO_12_PACKED:
-                case ARV_PIXEL_FORMAT_MONO_12_P:
-                    shift = 4;
-                    break;
-                case ARV_PIXEL_FORMAT_MONO_10:
-                    shift = 6;
-                    break;
-                default:
-                    break;
+        uint16_t *array = (uint16_t *) pRaw->pData;
+        if (shiftDir == AravisShiftLeft) {
+            for (unsigned int ib = 0; ib < size / 2; ib++) {
+                array[ib] = array[ib] << shiftBits;
             }
-            if (shift != 0) {
-                uint16_t *array = (uint16_t *) pRaw->pData;
-                for (unsigned int ib = 0; ib < size / 2; ib++) {
-                    array[ib] = array[ib] << shift;
-                }
+        } else if (shiftDir == AravisShiftRight) {
+            for (unsigned int ib = 0; ib < size / 2; ib++) {
+                array[ib] = array[ib] >> shiftBits;
             }
         }
     }
