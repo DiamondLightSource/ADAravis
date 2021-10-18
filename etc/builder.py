@@ -31,6 +31,7 @@ class aravisCamera(GenICam):
         'AVT_Manta_G145B',
         'AVT_Manta_G235B',
         'AVT_Manta_G235C',
+        'AVT_Manta_G319B',
         'AVT_Manta_G507B',
         'AVT_Manta_G609B',
         'AVT_Manta_G895B',
