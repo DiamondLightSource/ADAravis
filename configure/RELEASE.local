@@ -4,7 +4,7 @@ WORK=/dls_sw/work/R3.14.12.7/support
 
 ASYN=         $(SUPPORT)/asyn/4-41
 ADCORE=       $(SUPPORT)/ADCore/3-12-1dls1
-ADGENICAM=    $(SUPPORT)/ADGenICam/1-8dls4
+ADGENICAM=    $(SUPPORT)/ADGenICam/1-8dls5
 
 
 ARAVIS = /dls_sw/prod/tools/RHEL7-x86_64/aravis/0-8-1/prefix
