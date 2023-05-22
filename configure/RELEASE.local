@@ -4,7 +4,7 @@ WORK=/dls_sw/work/R3.14.12.7/support
 
 ASYN=         $(SUPPORT)/asyn/4-41
 ADCORE=       $(SUPPORT)/ADCore/3-11dls3
-ADGENICAM=    $(SUPPORT)/ADGenICam/1-8dls7
+ADGENICAM=    $(SUPPORT)/ADGenICam/1-8dls8
 
 #ADCORE=       $(SUPPORT)/ADCore/3-12-1dls1
 #ADGENICAM=    $(SUPPORT)/ADGenICam/1-8dls5
