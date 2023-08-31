@@ -16,6 +16,7 @@ class aravisCamera(GenICam):
     # List of camera classes available from ADGenICam
     camera_class_list = [
         'AVT_Mako_1_52',
+        'AVT_Mako_G040B',
         'AVT_Mako_G125B',
         'AVT_Mako_G125C',
         'AVT_Mako_G158B',
