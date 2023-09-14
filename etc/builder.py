@@ -46,6 +46,7 @@ class aravisCamera(GenICam):
         'Prosilica_GC',
         'Basler_piA640_210gm',
         'JAI_CM140',
+        'JAI_CM140_v2-2',
     ]
     def __init__(self, P, R, PORT, ID, CLASS, PV_ALIAS, BUFFERS=50, MEMORY=-1, **args):
         # Init the superclass
