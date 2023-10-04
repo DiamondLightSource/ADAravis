@@ -7,7 +7,7 @@ ASYN=         $(SUPPORT)/asyn/4-41
 BUSY=          $(SUPPORT)/busy/1-7-2dls5
 
 ADCORE=       $(SUPPORT)/ADCore/3-12-1dls2
-ADGENICAM=    $(SUPPORT)/ADGenICam/1-8dls14
+ADGENICAM=    $(SUPPORT)/ADGenICam/1-8dls15
 
 ARAVIS = /dls_sw/prod/tools/RHEL7-x86_64/aravis/0-8-1/prefix
 
