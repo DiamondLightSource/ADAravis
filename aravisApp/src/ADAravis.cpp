@@ -34,7 +34,7 @@ extern "C" {
 #include <epicsExport.h>
 #include <arvFeature.h>
 
-#define DRIVER_VERSION "2.2.1"
+#define DRIVER_VERSION "2.3"
 // aravis does not define the Mono12p format yet.
 #define ARV_PIXEL_FORMAT_MONO_12_P         ((ArvPixelFormat) 0x010c0047u)
 
@@ -90,7 +90,7 @@ static const struct pix_lookup pix_lookup[] = {
     { ARV_PIXEL_FORMAT_BAYER_BG_8,    NDColorModeBayer, NDUInt8,  NDBayerBGGR },
 // For Int16, use Mono16 if available, otherwise Mono12
     { ARV_PIXEL_FORMAT_MONO_16,       NDColorModeMono,  NDUInt16, 0           },
-// this doesn't work on Manta camers    { ARV_PIXEL_FORMAT_MONO_14,       NDColorModeMono,  NDUInt16, 0           },
+    { ARV_PIXEL_FORMAT_MONO_14,       NDColorModeMono,  NDUInt16, 0           },
     { ARV_PIXEL_FORMAT_MONO_12,       NDColorModeMono,  NDUInt16, 0           },
     { ARV_PIXEL_FORMAT_MONO_12_P,     NDColorModeMono,  NDUInt16, 0           },
     { ARV_PIXEL_FORMAT_MONO_12_PACKED,NDColorModeMono,  NDUInt16, 0           },
@@ -203,6 +203,8 @@ private:
     unsigned int featureIndex;
     int payload;
     int mEnableCaching;
+    int nConsecutiveBadFrames;
+    int nBadFramesPrior;
     epicsThread pollingLoop;
     std::vector<arvFeature*> featureList;
 };
@@ -246,7 +248,6 @@ static void newBufferCallbackC(ArvStream *stream, ADAravis *pPvt) {
 void ADAravis::newBufferCallback(ArvStream *stream) {
     ArvBuffer *buffer;
     int status;
-    static int nConsecutiveBadFrames = 0;
     static const char *functionName = "newBufferCallback";
 
     buffer = arv_stream_try_pop_buffer(stream);
@@ -271,7 +272,6 @@ void ADAravis::newBufferCallback(ArvStream *stream) {
                 "%s::%s bad frame status: %s\n", 
                 driverName, functionName, ArvBufferStatusToString(buffer_status) );
         else if ( ((nConsecutiveBadFrames-10) % 1000) == 0 ) {
-            static int  nBadFramesPrior = 0;
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
                 "%s::%s dad frame status: %s, %d msgs suppressed.\n", 
                 driverName, functionName, ArvBufferStatusToString(buffer_status), (nConsecutiveBadFrames - nBadFramesPrior));
@@ -319,6 +319,8 @@ ADAravis::ADAravis(const char *portName, const char *cameraName, int enableCachi
        genicam(NULL),
        payload(0),
        mEnableCaching(enableCaching),
+       nConsecutiveBadFrames(0),
+       nBadFramesPrior(0),
        pollingLoop(*this, 
                    "aravisPoll", 
                    stackSize>0 ? stackSize : epicsThreadGetStackSize(epicsThreadStackMedium), 
@@ -396,7 +398,20 @@ asynStatus ADAravis::makeCameraObject() {
 
     GErrorHelper err;
     /* remove old camera if it exists */
+    /* relinquish CCP before unreferencing it */
     if (this->camera != NULL) {
+        if(arv_camera_is_gv_device(this->camera) && arv_gv_device_is_controller(ARV_GV_DEVICE(this->device))){
+            if (!(arv_gv_device_leave_control(ARV_GV_DEVICE(this->device),err.get()))){
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: Current ArvGvDevice has control, but control couldn't be relinquished. err=%s\n",
+                    driverName, functionName, err->message);
+            }
+            else {
+                asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+                    "%s:%s: Relinquished control of camera.\n",
+                    driverName, functionName);
+            }
+        }
         g_object_unref(this->camera);
         this->camera = NULL;
     }
@@ -557,20 +572,16 @@ asynStatus ADAravis::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    epicsInt32 rbv;
     const char  *reasonName = "unknownReason";
     //static const char *functionName = "writeInt32";
     getParamName(0, function, &reasonName);
-
-    /* Set the parameter and readback in the parameter library.  This may be overwritten when we read back the
-     * status at the end, but that's OK */
-    getIntegerParam(function, &rbv);
-    status = setIntegerParam(function, value);
 
     /* If we have no camera, then just fail */
     if (function == AravisReset) {
         status = this->connectToCamera();
     } else if (this->camera == NULL || this->connectionValid != 1) {
+        epicsInt32 rbv;
+        getIntegerParam(function, &rbv);
         if (rbv != value)
             setIntegerParam(ADStatus, ADStatusDisconnected);
         status = asynError;
@@ -579,13 +590,14 @@ asynStatus ADAravis::writeInt32(asynUser *pasynUser, epicsInt32 value)
     } else if (function == AravisFrameRetention || function == AravisPktResend || function == AravisPktTimeout ||
                function == AravisShiftDir || function == AravisShiftBits || function == AravisConvertPixelFormat) {
         /* just write the value for these as they get fetched via getIntegerParam when needed */
+        status = setIntegerParam(function, value);
     } else if ((function < FIRST_ARAVIS_CAMERA_PARAM) || (function > LAST_ARAVIS_CAMERA_PARAM)) {
         /* If this parameter belongs to a base class call its method */
         /* GenICam parameters are created after this constructor runs, so they are higher numbers */
         status = ADGenICam::writeInt32(pasynUser, value);
     /* generic feature lookup */
     } else {
-           status = asynError;
+        status = asynError;
     }
 
     /* Do callbacks so higher layers see any changes */
