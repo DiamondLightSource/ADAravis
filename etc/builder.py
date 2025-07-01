@@ -15,6 +15,7 @@ class aravisCamera(GenICam):
     _SpecificTemplate = aravisCameraTemplate
     # List of camera classes available from ADGenICam
     camera_class_list = [
+        'AVT_Alvium_G1_1240M',
         'AVT_Mako_1_52',
         'AVT_Mako_G040B',
         'AVT_Mako_G125B',
